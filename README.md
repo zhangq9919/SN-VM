@@ -18,9 +18,11 @@ p t w
 
 Please, consult SN_format.txt files for detail
 
-Input files can be obtained from NDRtoLSN.c
+Input files can be obtained from *NDRtoLSN.c
 
-NDRtoLSN.c converts .ndr file into .lsn file and stores tables of names for places and transitions.
+*NDRtoLSN.c converts .ndr file into .lsn file and stores tables of names for places and transitions.
+
+NDRtoLSN file according to https://github.com/dazeorgacm/NDRtoSN
 
 Output (file) format:
 ------------
@@ -58,10 +60,22 @@ An example
 
 -Wathch Sleptsov net behavior in add_result.txt
 
+Optimization
+------------
+Sparse matrix is used to replace the original matrix.
+
+>SNPsm -d debug_level -nth nth  <input_file > output_file
+
 Tools to generate models:
 ------------
 Tina Toolbox for analysis of Petri nets and Time Petri nets http://www.laas.fr/tina
 
 References:
 ------------
-Zaitsev DA (2016) Sleptsov Nets Run Fast. IEEE Trans Syst Man Cybern Syst 46:682–693. https://doi.org/10.1109/TSMC.2015.2444414
+1. Zaitsev DA (2016) Sleptsov Nets Run Fast. IEEE Trans Syst Man Cybern Syst 46:682–693. https://doi.org/10.1109/TSMC.2015.2444414
+
+2. Zaitsev D.A., Jürjens J. Programming in the Sleptsov net language for systems control, Advances in Mechanical Engineering, 2016, Vol. 8(4), 1-11. https://doi.org/10.1177%2F1687814016640159
+
+3. Zaitsev D.A. Universal Sleptsov Net, International Journal of Computer Mathematics, 94(12) 2017, 2396-2408. http://dx.doi.org/10.1080/00207160.2017.1283410
+
+4. Qing Zhang, Ding Liu, Yifan Hou, Sleptsov Net Processor, International Conference ”Problems of Infocommunications. Science and Technology” (PICST2022), 10-12 October, 2022, Kyiv, Ukraine.
