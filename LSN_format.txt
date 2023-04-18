@@ -1,0 +1,38 @@
+NAME
+       format   - file formats of the LSN (low-level net)
+
+Grammar:
+
+         .lsn               ::= <pl><tr><arc><nnmu><nst><arcdesc>^k <M>^l
+          pl                ::= m
+          tr                ::= n
+         arc                ::= k
+         nnmu               ::= l
+         nst                ::= NST
+        arcdesc             ::= v1 v2 w
+          M                 ::= p mu 
+           
+  Notes:
+      1) m n k l NST
+
+          m - number of places, n - number of transitions, k - number of arcs, l - number of nonzero markings, NST - number of substitution transition
+
+          If NST = 0, it is LSN.
+
+          If NST > 0 , it is HSN.
+
+       2) arcdesc:
+
+          Case 1: If v1 < 0, v2 < 0, arc from transition v1 to transition v2. It is a priority arc with w = 0.
+
+          Case 2: If v1 > 0, v2 > 0, arc from place v1 to transition v2 of multiplicity w.
+        
+          Case 3: If v1 < 0, v2 > 0, arc from transition v2 to place |v1| of multiplicity w.
+       
+          Case 4: When w is negative, it is inhibitor arc.
+
+       3) Marking line:
+
+            p - place number, mu - marking value
+
+       4) Each line that starts from ';', it considers as a comment.
