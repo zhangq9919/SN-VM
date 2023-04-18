@@ -1,22 +1,22 @@
 # Description
-Sleptsov net processor(SNP) - usual multicore software for running low-level Sleptsov nets.
+Sleptsov net Virtual Machine(SNVM) - usual multicore software for running low-level Sleptsov nets.
 
-Sleptsov net processor is implemented as a software interpreter of SN behavior, which can load the transitions, arcs and tokens of SNs. This processor implements the concurrent firing of transitions in multiple instances in a single step.
+Sleptsov net virtual machine is implemented as a software interpreter of SN behavior, which can load the transitions, arcs and tokens of SNs. This processor implements the concurrent firing of transitions in multiple instances in a single step.
 
 Command line formats:
 ------------
-SNP -d debug_level -nth nth  <input_file > output_file
+SNVM lsn_file.lsn output_file.txt 
 
 
 Input (file) format:
 ------------
 .txt / .lsn
 
-m n k      
-initial marking  
-p t w
+m n k l NST
+arcs
+initial marking: p mu 
 
-Please, consult SN_format.txt files for detail
+Please, consult LSN_format.txt files for detail
 
 Input files can be obtained from *NDRtoLSN.c
 
@@ -30,7 +30,7 @@ Output (file) format:
 
 Sleptsov net behavior
 
-Parameters:
+Program options:
 -----------
 -d debug_level: Level of output information     
 
@@ -42,11 +42,24 @@ Parameters:
 
 -nth nth: number of thread
 
+-pm pm: choose format for printing marking (0 - usual or 1 - sparse vector)
+
+-smax step: specified steps
+
+-wm: print raw matices and vectors
+
+Parameters:
+-----------
+
 m: number of places
 
 n: number of transitions
 
 k: number of arcs
+
+l: number of nonzero markings
+
+NST: number of substitution transition
 
 An example
 ------------
@@ -54,17 +67,21 @@ An example
 
 -sn_add.ndr is the model for calculating z=x+y; converts sn_add.ndr file into an_add.lsn file; sn_add.txt.nmp and sn_add.txt.nmt stores tables of names for places and transitions.
 
->SNP -d 0 -nth 4  <sn_add.lsn/sn_add.txt > add_result.txt
+>SNVM sn_add.lsn add_result.txt
 
--Run sleptsov net for computing z=x+y; debug_level is 0, only the output of the final marking; nth is 4, 4 threads.
+-Run sleptsov net for computing z=x+y
 
 -Wathch Sleptsov net behavior in add_result.txt
 
-Optimization
+Generator
 ------------
-Sparse matrix is used to replace the original matrix.
+gen_pol: generator of .hsn for computing polynomials  n=k
 
->SNPsm -d debug_level -nth nth  <input_file > output_file
+>gen_pol 2 pol2.hsn
+
+k=2: a2x^2+a1x+a0
+
+HSN file format v1.2 according to https://github.com/HfZhao1998/Compiler-and-Linker-of-Sleptsov-net-Program
 
 Tools to generate models:
 ------------
@@ -79,3 +96,5 @@ References:
 3. Zaitsev D.A. Universal Sleptsov Net, International Journal of Computer Mathematics, 94(12) 2017, 2396-2408. http://dx.doi.org/10.1080/00207160.2017.1283410
 
 4. Qing Zhang, Ding Liu, Yifan Hou, Sleptsov Net Processor, International Conference ”Problems of Infocommunications. Science and Technology” (PICST2022), 10-12 October, 2022, Kyiv, Ukraine.
+
+5. Hongfei Zhao, Ding Liu, Yifan Hou, Compiler and Linker of Sleptsov Net Program,International Conference ”Problems of Infocommunications. Science and Technology” (PICST2022), 10-12 October, 2022, Kyiv, Ukraine.
