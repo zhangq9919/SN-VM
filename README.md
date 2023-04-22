@@ -1,31 +1,37 @@
-# Description
+## `SN-VM`: Sleptsov Net VM
+
+# Sleptsov net Virtual Machine(SN-VM) 
+
 Sleptsov net Virtual Machine(SN-VM) - usual multicore software for running low-level Sleptsov nets (LSN).
 
 Sleptsov net virtual machine is implemented as a software interpreter of SN behavior, which can load the transitions, arcs and tokens of LSN. This processor implements the concurrent firing of transitions in multiple instances in a single step.
 
-How to use `SNVM` as a part of experimental `SNC IDE&VM`:
----------------------------------------------------------
+How to use `SN-VM-GPU` as a part of experimental `SNC IDE&VM`:
+--------------------------------------------------------------
+
 We list references to components in "Compatibility" section.
 
-1) Use `Tina` `nd` as graphical editor.
+1) Use `Tina` `nd` as graphical editor and its labels with special syntax (section "Transition substitution label") to specify transition substitution of `HSN`.
 
-2) Use `NDRtoSN` to convert `NDR` file of `Tina` into `LSN`. 
+2) Use `NDRtoSN` to convert `NDR` file of `Tina` into `HSN` or `LSN`. 
 
-3) Run `LSN` file on `SN-VM` or `SN-VM-GPU`.
+3) Use `HSNtoLSN` to compile and link HSN file and mentioned in it `LSN` files into a single `LSN` file.
+
+4) Run `LSN` file on `SN-VM` or `SN-VM-GPU`.
+
 
 Compatibility: 
 -------------- 
 
 `Tina`, `nd`, and `NDR` file format according to https://projects.laas.fr/tina/index.php
 
-`NDRtoSN` and transition substitution labels according to https://github.com/dazeorgacm/NDRtoSN
+`NDRtoSN` and Transition substitution labels according to https://github.com/dazeorgacm/NDRtoSN
 
 `SN-VM` and `LSN` file format according to https://github.com/zhangq9919/Sleptsov-net-processor
 
 `HSNtoLSN` and `HSN` file format according to https://github.com/HfZhao1998/Compiler-and-Linker-of-Sleptsov-net-Program
 
 `SN-VM-GPU` and `MSN` file format according to https://github.com/tishtri/SN-VM-GPU
-
 
 Command line formats:
 ------------
