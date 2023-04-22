@@ -1,7 +1,31 @@
 # Description
-Sleptsov net Virtual Machine(SNVM) - usual multicore software for running low-level Sleptsov nets.
+Sleptsov net Virtual Machine(SN-VM) - usual multicore software for running low-level Sleptsov nets (LSN).
 
-Sleptsov net virtual machine is implemented as a software interpreter of SN behavior, which can load the transitions, arcs and tokens of SNs. This processor implements the concurrent firing of transitions in multiple instances in a single step.
+Sleptsov net virtual machine is implemented as a software interpreter of SN behavior, which can load the transitions, arcs and tokens of LSN. This processor implements the concurrent firing of transitions in multiple instances in a single step.
+
+How to use `SNVM` as a part of experimental `SNC IDE&VM`:
+---------------------------------------------------------
+We list references to components in "Compatibility" section.
+
+1) Use `Tina` `nd` as graphical editor.
+
+2) Use `NDRtoSN` to convert `NDR` file of `Tina` into `LSN`. 
+
+3) Run `LSN` file on `SN-VM` or `SN-VM-GPU`.
+
+Compatibility: 
+-------------- 
+
+`Tina`, `nd`, and `NDR` file format according to https://projects.laas.fr/tina/index.php
+
+`NDRtoSN` and transition substitution labels according to https://github.com/dazeorgacm/NDRtoSN
+
+`SN-VM` and `LSN` file format according to https://github.com/zhangq9919/Sleptsov-net-processor
+
+`HSNtoLSN` and `HSN` file format according to https://github.com/HfZhao1998/Compiler-and-Linker-of-Sleptsov-net-Program
+
+`SN-VM-GPU` and `MSN` file format according to https://github.com/tishtri/SN-VM-GPU
+
 
 Command line formats:
 ------------
@@ -18,11 +42,9 @@ initial marking: p mu
 
 Please, consult LSN_format.txt files for detail
 
-Input files can be obtained from *NDRtoLSN.c
+Input files can be obtained from *NDRtoSN.c
 
-*NDRtoLSN.c converts .ndr file into .lsn file and stores tables of names for places and transitions.
-
-NDRtoLSN file according to https://github.com/dazeorgacm/NDRtoSN
+*NDRtoSN.c converts .ndr file into .lsn file and stores tables of names for places and transitions.
 
 Output (file) format:
 ------------
@@ -61,18 +83,6 @@ l: number of nonzero markings
 
 NST: number of substitution transition
 
-An example
-------------
->NDRtoLSN sn_add.ndr sn_add.txt
-
--sn_add.ndr is the model for calculating z=x+y; converts sn_add.ndr file into an_add.lsn file; sn_add.txt.nmp and sn_add.txt.nmt stores tables of names for places and transitions.
-
->SNVM sn_add.lsn add_result.txt
-
--Run sleptsov net for computing z=x+y
-
--Wathch Sleptsov net behavior in add_result.txt
-
 Generator
 ------------
 gen_pol: generator of .hsn for computing polynomials  n=k
@@ -81,7 +91,19 @@ gen_pol: generator of .hsn for computing polynomials  n=k
 
 k=2: a2x^2+a1x+a0
 
-HSN file format v1.2 according to https://github.com/HfZhao1998/Compiler-and-Linker-of-Sleptsov-net-Program
+*HSN can be converted to LSN using *Compiler and linker of Sleptsov net program.
+
+Examples
+------------
+>NDRtoSN sn_add.ndr sn_add.lsn
+
+-sn_add.ndr is the model for calculating z=x+y; converts sn_add.ndr file into an_add.lsn file and stores tables of names for places and transitions.
+
+>SNVM sn_add.lsn add_result.txt
+
+-Run sleptsov net for computing z=x+y
+
+-Watch Sleptsov net behavior in add_result.txt
 
 Tools to generate models:
 ------------
