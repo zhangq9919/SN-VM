@@ -48,7 +48,7 @@ static char Help[] =
   "-nth                          number of thread\n"
   "-pm                           choose format for printing marking (0 - usual or 1 - sparse vector)\n"
   "-smax                         specified steps\n"
-  "-wm                           print raw matices and vectors\n"
+  "-rm                           print raw matices and vectors\n"
   "-r                            Sleptsov net rule\n"
   "lsn_file.lsn                  Low-level sleptsov net file based on LSN format\n"
   "output_file.txt               The result of the LSN running through SN Virtual Machine\n";
@@ -94,7 +94,7 @@ void priority_chain(int *R,int n,int nth);
 函数：解析命令行
 Function: Parse command line.
 **/
-int command(int numf,int snumf,int argc,int *nth,int *debug_level,int *o,int *printm,long int *smax,int *wm,char *argv[]);
+int command(int numf,int snumf,int argc,int *nth,int *debug_level,int *o,int *printm,long int *smax,int *rm,char *argv[]);
 
 
 /**
@@ -108,7 +108,7 @@ int allocate(int *m,int *n,int *k,int *l,int *NST,int **mu,int **f,int **B,int *
 函数：读LSN文件,包括读header,读弧，读初始标记
 Function: Read LSN file, including header, arcs, initial marking.
 **/
-void read_lsn(int m,int n,int k,int l,int NST,int v1,int v2,int v3,int digit,int *mu,int *f,int *B,int *D,int *R,int debug_level,int nth,int printm,int wm,FILE *fi,FILE *fo,char input_buffer[]);
+void read_lsn(int m,int n,int k,int l,int NST,int v1,int v2,int v3,int digit,int *mu,int *f,int *B,int *D,int *R,int debug_level,int nth,int printm,int rm,FILE *fi,FILE *fo,char input_buffer[]);
 
 
 /**
@@ -126,14 +126,14 @@ Case 2: If v1 > 0, v2 > 0, arc from place v1 to transition v2 of multiplicity w.
 Case 3: If v1 < 0, v2 > 0, arc from transition v2 to place |v1| of multiplicity w.
 Case 4: When w is negative, it is inhibitor arc.
 **/
-void read_arc( int v1, int v2, int v3,int m,int n,int *B,int *D, int *R,int debug_level,int wm,FILE *fo);
+void read_arc( int v1, int v2, int v3,int m,int n,int *B,int *D, int *R,int debug_level,int rm,FILE *fo);
 
 
 /**
 函数：读库所数 - m，变迁数 - n，弧的数量 - k,marking中非零数 - l,替换变迁个数 - NST
 Function: Read the number of places, the number of transitions, the number of arcs, nonzero number of marking, number of substitution transition (0 for LSN)
 **/
-void read_mnkl(int m,int n,int k,int l,int NST,int digit,int wm,int debug_level,FILE *fo);
+void read_mnkl(int m,int n,int k,int l,int NST,int digit,int rm,int debug_level,FILE *fo);
 
 
 /**
@@ -146,7 +146,7 @@ Algorithm3: Remove Low Priority Transition
 **/
 void run_lsn(int *f, int *mu, int *B,int *D,int *R,int m, int n,int debug_level, int nth,int printm,FILE *fo,long int smax);
 
-void printBDR(int m,int n,int *B,int *D,int *R,int debug_level,int wm,FILE *fo);
+void printBDR(int m,int n,int *B,int *D,int *R,int debug_level,int rm,FILE *fo);
 
 void printmk(int m,  int *mu,int printm,FILE *fo);
 
@@ -169,7 +169,7 @@ int main(int argc,char *argv[])
 	int nth=omp_get_max_threads();//-nth
 	int printm=1;//choose format for printing marking (0-usual or 1-sparse vector) -pm
 	long int smax;//-smax
-	int wm = 1;//-wm
+	int rm = 1;//-rm
 	int ii = 0;//pointer
 	int numf,snumf;
 	double t1,t2;
@@ -178,7 +178,7 @@ int main(int argc,char *argv[])
 	char input_buffer[MAXSTRLEN + 1];
 
 	/* parse command line */
-	command(numf,snumf,argc,&nth,&debug_level,&o,&printm,&smax,&wm,argv);
+	command(numf,snumf,argc,&nth,&debug_level,&o,&printm,&smax,&rm,argv);
 	/*lsn_ile.lsn & output_file.txt*/
 	fi = fopen( argv[ o ], "r" );
 	fo = fopen( argv[ o+1 ], "w" );
@@ -194,9 +194,9 @@ int main(int argc,char *argv[])
 	digit = allocate(&m,&n,&k,&l,&NST,&mu,&f,&B,&D,&R,fi,input_buffer);
 	t1=magma_wtime();
 	/*read LSN file*/
-	read_lsn(m,n,k,l,NST,v1,v2,v3,digit,mu,f,B,D,R,debug_level,nth,printm,wm,fi,fo,input_buffer);
+	read_lsn(m,n,k,l,NST,v1,v2,v3,digit,mu,f,B,D,R,debug_level,nth,printm,rm,fi,fo,input_buffer);
 	/*print matrices B D R*/
-	printBDR(m,n,B,D,R,debug_level,wm,fo);
+	printBDR(m,n,B,D,R,debug_level,rm,fo);
 	/*SN Virtual Machine: run LSN according to firing rule of SN*/
 	run_lsn(f,mu,B,D,R,m,n,debug_level,nth,printm,fo,smax);
 	/*print final marking*/
@@ -243,7 +243,7 @@ void priority_chain(int *R,int n,int nth)
 }
 
 //解析命令行
-int command(int numf,int snumf,int argc,int *nth,int *debug_level,int *o,int *printm,long int *smax,int *wm,char *argv[])
+int command(int numf,int snumf,int argc,int *nth,int *debug_level,int *o,int *printm,long int *smax,int *rm,char *argv[])
 {
 	int i;
 	numf=0;
@@ -284,8 +284,8 @@ int command(int numf,int snumf,int argc,int *nth,int *debug_level,int *o,int *pr
 			*smax = atoi( argv[ i ] );
 			numf=snumf;
 			*o+=2;
-		} else if( strcmp( argv[i], "-wm" )==0 ) {
-			*wm = 0;
+		} else if( strcmp( argv[i], "-rm" )==0 ) {
+			*rm = 0;
 			*o+=1;
 		} else if( strcmp( argv[i], "-r" )==0 ) {
 			*o+=1;
@@ -338,32 +338,32 @@ void zeroBDRmu(int m,int n,int *mu,int *f,int *B,int *D,int *R)
 	memset(f,0,n*sizeof(int));
 }
 
-void read_lsn(int m,int n,int k,int l,int NST,int v1,int v2,int v3,int digit,int *mu,int *f,int *B,int *D,int *R,int debug_level,int nth,int printm,int wm,FILE *fi,FILE *fo,char input_buffer[])
+void read_lsn(int m,int n,int k,int l,int NST,int v1,int v2,int v3,int digit,int *mu,int *f,int *B,int *D,int *R,int debug_level,int nth,int printm,int rm,FILE *fi,FILE *fo,char input_buffer[])
 {
 	int i,p;
 	/*zeroBDRmu*/
 	zeroBDRmu(m,n,mu,f,B,D,R);
 	/*read the header: m n k l NST*/
-	read_mnkl(m,n,k,l,NST,digit,wm,debug_level,fo);
+	read_mnkl(m,n,k,l,NST,digit,rm,debug_level,fo);
 	/*read arcs*/
 	for(i=0; i<k; i++) {
 		SKIP_COMM
 		sscanf(input_buffer,"%d %d %d",&v1,&v2,&v3);// p t w
-		read_arc(v1,v2,v3,m,n,B,D,R,debug_level,wm,fo);
+		read_arc(v1,v2,v3,m,n,B,D,R,debug_level,rm,fo);
 	}
 	/*read initial marking*/
 	for(i=0; i<l; i++) {
 		SKIP_COMM
 		sscanf(input_buffer,"%d %d",&v1,&v2);//p mu
 		mu[v1-1] = v2;
-		if(debug_level>0&&wm) fprintf(fo,"%d %d\n",v1,v2);
+		if(debug_level>0&&rm) fprintf(fo,"%d %d\n",v1,v2);
 	}
 	/*call function about priority arc chain*/
 	priority_chain(R,n,nth);
 
-	if(!wm) {
+	if(!rm) {
 		fprintf(fo,"m=%d n=%d\n\n",m,n);
-		printBDR(m,n,B,D,R,debug_level,wm,fo);
+		printBDR(m,n,B,D,R,debug_level,rm,fo);
 		fprintf(fo,"\nthe initial marking mu is:\n");
 		if(printm==1) {
 			for(p=1; p<=m; p++) {
@@ -383,7 +383,7 @@ void read_lsn(int m,int n,int k,int l,int NST,int v1,int v2,int v3,int digit,int
 }
 
 //读库所数，变迁数和弧的数量,marking中非零个数
-void read_mnkl(int m,int n,int k,int l,int NST,int digit,int wm,int debug_level,FILE *fo)
+void read_mnkl(int m,int n,int k,int l,int NST,int digit,int rm,int debug_level,FILE *fo)
 {
 	if(m < 0 || n < 0 || k < 0 ) {
 		err = ERR_NEGATIVE;
@@ -400,14 +400,14 @@ void read_mnkl(int m,int n,int k,int l,int NST,int digit,int wm,int debug_level,
 		perr("3");
 		exit(1);
 	}
-	if(debug_level > 0&&wm) fprintf(fo,"m=%d n=%d k=%d l=%d NST=%d\n",m,n,k,l,NST);
+	if(debug_level > 0&&rm) fprintf(fo,"m=%d n=%d k=%d l=%d NST=%d\n",m,n,k,l,NST);
 }
 
 //读弧的信息
-void read_arc( int v1, int v2, int v3,int m,int n,int *B,int *D, int *R,int debug_level,int wm,FILE *fo)
+void read_arc( int v1, int v2, int v3,int m,int n,int *B,int *D, int *R,int debug_level,int rm,FILE *fo)
 {
 	int a, b;
-	if(debug_level > 0&&wm)  fprintf(fo,"%d %d %d\n",v1,v2,v3);
+	if(debug_level > 0&&rm)  fprintf(fo,"%d %d %d\n",v1,v2,v3);
 	if(v1 == 0 || v2 == 0) {
 		err = ERR_A_ZERO;
 		perr("4");
@@ -440,7 +440,7 @@ void read_arc( int v1, int v2, int v3,int m,int n,int *B,int *D, int *R,int debu
 		}
 		if(v3>0) {
 			MELT(B,a-1,b-1,m,n)=v3; // B[a-1][b-1]=v3
-			if(debug_level==2&&wm) fprintf(fo,"arc from place %d to transition %d of myltiplicity %d\n",v1,v2,v3);//v1,v3 are positive
+			if(debug_level==2&&rm) fprintf(fo,"arc from place %d to transition %d of myltiplicity %d\n",v1,v2,v3);//v1,v3 are positive
 		}
 		if(v3<0) {
 			if(v3 != -1 ) {
@@ -449,7 +449,7 @@ void read_arc( int v1, int v2, int v3,int m,int n,int *B,int *D, int *R,int debu
 				exit(1);
 			}
 			MELT(B,a-1,b-1,m,n)=v3; //B[a-1][b-1]=v3
-			if(debug_level==2&&wm) {
+			if(debug_level==2&&rm) {
 				fprintf(fo,"inhibitor arc from place %d to transition %d\n",v1,v2);        //v3 is negative,it is inhibitor
 			}
 		}
@@ -468,7 +468,7 @@ void read_arc( int v1, int v2, int v3,int m,int n,int *B,int *D, int *R,int debu
 			exit(1);
 		}
 		MELT(R,a-1,b-1,n,n) = 1;//R[a-1][b-1]=1
-		if(debug_level==2&&wm) fprintf(fo,"priority arc from transition %d to transition %d\n",abs(v1),abs(v2));// t --> t
+		if(debug_level==2&&rm) fprintf(fo,"priority arc from transition %d to transition %d\n",abs(v1),abs(v2));// t --> t
 
 	} else {
 		if(v3 <= 0 ) {
@@ -485,7 +485,7 @@ void read_arc( int v1, int v2, int v3,int m,int n,int *B,int *D, int *R,int debu
 			exit(1);
 		}
 		MELT(D,a-1,b-1,m,n)=v3; //D[a-1][b-1]=v3
-		if(debug_level==2&&wm) fprintf(fo,"arc from transition %d to place %d of myltiplicity %d\n",v2,abs(v1),v3);//v1 is negative(outgoing)
+		if(debug_level==2&&rm) fprintf(fo,"arc from transition %d to place %d of myltiplicity %d\n",v2,abs(v1),v3);//v1 is negative(outgoing)
 	}
 }
 
@@ -633,10 +633,10 @@ void run_lsn(int *f, int *mu, int *B,int *D,int *R,int m, int n,int debug_level,
 
 }
 
-void printBDR(int m,int n,int *B,int *D,int *R,int debug_level,int wm,FILE *fo)
+void printBDR(int m,int n,int *B,int *D,int *R,int debug_level,int rm,FILE *fo)
 {
 	int i,j;
-	if(debug_level>0 || !wm) {
+	if(debug_level>0 || !rm) {
 		fprintf(fo,"matrix of transition incoming arcs B:\n");
 		fprintf(fo,"（P\\T）\n");
 		for(i=0; i<m; i++) {
