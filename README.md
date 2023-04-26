@@ -38,10 +38,8 @@ Command line formats:
 SNVM lsn_file.lsn output_file.txt 
 
 
-Input (file) format:
+Input file (.lsn) format:
 ------------
-.txt / .lsn
-
 m n k l NST
 arcs
 initial marking: p mu 
@@ -52,10 +50,8 @@ Input files can be obtained from *NDRtoSN.c
 
 *NDRtoSN.c converts .ndr file into .lsn file and stores tables of names for places and transitions.
 
-Output (file) format:
+Output file (.txt) format:
 ------------
-.txt
-
 Sleptsov net behavior
 
 Program options:
@@ -97,13 +93,13 @@ gen_pol: generator of .hsn for computing polynomials  n=k
 
 k=2: a2x^2+a1x+a0
 
-*HSN can be converted to LSN using *Compiler and linker of Sleptsov net program.
+`HSN` file can be converted to `LSN` file using *Compiler and linker of Sleptsov net program.
 
 Examples
 ------------
 >NDRtoSN sn_add.ndr sn_add.lsn
 
--sn_add.ndr is the model for calculating z=x+y; converts sn_add.ndr file into an_add.lsn file and stores tables of names for places and transitions.
+-sn_add.ndr is the model for calculating z=x+y; converts sn_add.ndr file into sn_add.lsn and stores tables of names for places and transitions.
 
 >SNVM sn_add.lsn add_result.txt
 
@@ -111,9 +107,19 @@ Examples
 
 -Watch Sleptsov net behavior in add_result.txt
 
-Tools to generate models:
-------------
-Tina Toolbox for analysis of Petri nets and Time Petri nets http://www.laas.fr/tina
+The more examples of `LSN` files and `HSN` files:
+
+add2.hsn & add2.lsn: Add two numbers
+
+matrix2.hsn & matrix2.lsn: Two-dimensional matrix multiplication
+
+mul3.hsn & mul3.lsn: Multiply three numbers
+
+pol2.hsn & pol2.lsn: Computational polynomial n=2
+
+fdiv.lsn: Division
+
+depnz3.lsn: Exact double exponent counters 2^2^k k=3
 
 References:
 ------------
