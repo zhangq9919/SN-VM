@@ -180,7 +180,8 @@ int main(int argc,char *argv[])
 	/* parse command line */
 	command(numf,snumf,argc,&nth,&debug_level,&o,&printm,&smax,&rm,argv);
 	/*lsn_ile.lsn & output_file.txt*/
-	fi = fopen( argv[ o ], "r" );
+	if( argv[ o ]==NULL ) fi = stdin;
+	else fi = fopen( argv[ o ], "r" );
 	if( fi == NULL ) {
 		fprintf( stderr, "*** error open file %s\n",  argv[ o ] );
 		exit(2);
@@ -360,7 +361,7 @@ void read_lsn(int m,int n,int k,int l,int NST,int v1,int v2,int v3,int digit,int
 		mu[v1-1] = v2;
 		if(debug_level>0&&rm) fprintf(fo,"%d %d\n",v1,v2);
 	}
-	fclose( fi );
+	if(fi != stdin ) fclose( fi );
 	/*call function about priority arc chain*/
 	priority_chain(R,n,nth);
 
