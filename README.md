@@ -27,7 +27,7 @@ Compatibility:
 
 `NDRtoSN` and Transition substitution labels according to https://github.com/dazeorgacm/NDRtoSN
 
-`SN-VM` and `LSN` file format according to https://github.com/zhangq9919/Sleptsov-net-processor
+`SN-VM` and `LSN` file format according to https://github.com/zhangq9919/SN-VM
 
 `HSNtoLSN` and `HSN` file format according to https://github.com/HfZhao1998/Compiler-and-Linker-of-Sleptsov-net-Program
 
