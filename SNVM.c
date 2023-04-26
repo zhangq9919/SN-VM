@@ -181,11 +181,12 @@ int main(int argc,char *argv[])
 	command(numf,snumf,argc,&nth,&debug_level,&o,&printm,&smax,&rm,argv);
 	/*lsn_ile.lsn & output_file.txt*/
 	fi = fopen( argv[ o ], "r" );
-	fo = fopen( argv[ o+1 ], "w" );
 	if( fi == NULL ) {
-		fprintf( stderr, "*** error open file %s\n", argv[ o ] );
+		fprintf( stderr, "*** error open file %s\n",  argv[ o ] );
 		exit(2);
 	}
+	if( argv[ o+1 ]==NULL ) fo = stdout;
+	else fo = fopen( argv[ o+1 ], "w" );
 	if( fo == NULL ) {
 		fprintf( stderr, "*** error open file %s\n", argv[ o+1 ] );
 		exit(2);
@@ -250,7 +251,7 @@ int command(int numf,int snumf,int argc,int *nth,int *debug_level,int *o,int *pr
 	for( i=1; i<argc; i++ ) {
 		if( strcmp( argv[i], "-h" )==0 ) {
 			printf( "%s", Help );
-			return( 0);
+			*o+=1;
 		}
 		if( strcmp( argv[i], "-d" )==0 ) {
 			snumf=numf;
@@ -292,6 +293,7 @@ int command(int numf,int snumf,int argc,int *nth,int *debug_level,int *o,int *pr
 			printf("#####The processor adopts the sleptsov net rule.\n");
 		}
 	}
+	return( 0);
 }
 
 //allocate space for matrices and vector
@@ -354,26 +356,19 @@ void read_lsn(int m,int n,int k,int l,int NST,int v1,int v2,int v3,int digit,int
 	/*read initial marking*/
 	for(i=0; i<l; i++) {
 		SKIP_COMM
-		sscanf(input_buffer,"%d %d",&v1,&v2);//p mu
+		sscanf(input_buffer,"%d %d\n",&v1,&v2);//p mu
 		mu[v1-1] = v2;
 		if(debug_level>0&&rm) fprintf(fo,"%d %d\n",v1,v2);
 	}
+	fclose( fi );
 	/*call function about priority arc chain*/
 	priority_chain(R,n,nth);
 
 	if(!rm) {
-		fprintf(fo,"m=%d n=%d\n\n",m,n);
+		fprintf(fo,"%d %d\n\n",m,n);
 		printBDR(m,n,B,D,R,debug_level,rm,fo);
-		fprintf(fo,"\nthe initial marking mu is:\n");
-		if(printm==1) {
-			for(p=1; p<=m; p++) {
-				if(mu[p-1]!=0) fprintf(fo,"%dp%d+",mu[p-1],p);
-			}
-			fprintf(fo,"END");
-		} else {
-			for(p=1; p<=m; p++) {
-				fprintf(fo,"%d ",mu[p-1]);
-			}
+		for(p=1; p<=m; p++) {
+			fprintf(fo,"%d ",mu[p-1]);
 		}
 		fprintf(fo,"\n");
 		fprintf(stderr,"###The raw m, n, matrices and vectors have been generated!\n");
@@ -518,7 +513,7 @@ void run_lsn(int *f, int *mu, int *B,int *D,int *R,int m, int n,int debug_level,
 		for(t=1; t<=n; t++) {
 			int	firable_m = INT_MAX;//Set the initial value to a larger value
 			#pragma omp simd reduction(min:firable_m)
-            #pragma unroll
+#pragma unroll
 			for(p=1; p<=m; p++) {
 				if( MELT(B,p-1,t-1,m,n)>0 ) {// regular arc  B[p-1][t-1]>0
 					firable = mu[p-1]/MELT(B,p-1,t-1,m,n);//multiplicity of fireable arc equals to mu marking divided by B[p-1][t-1]
@@ -541,7 +536,7 @@ void run_lsn(int *f, int *mu, int *B,int *D,int *R,int m, int n,int debug_level,
 		#pragma omp parallel for private(i,j) num_threads(nth)
 		for(i = 1; i <= n; i++) {
 			#pragma omp simd
-            #pragma unroll
+#pragma unroll
 			for(j = 1; j <= n; j++) {
 				if(MELT(R,i-1,j-1,n,n) > 0 && f[i - 1] != 0) { //R[i-1][j-1] > 0
 					f[j - 1] = 0;  //置0，使其不触发
@@ -585,6 +580,7 @@ void run_lsn(int *f, int *mu, int *B,int *D,int *R,int m, int n,int debug_level,
 		When tb < 0, it is inhibitor arc and put td*fm tokens to each of its output places.
 		Otherwise, it puts td*fm tokens to each of its output place and extracts tb*fm to each of its input place.
 		**/
+		int dim = 0;
 		fm = f[firing_n-1];
 		if(debug_level==2)
 			fprintf(fo,"firing transition multiplicity %d \n",fm);
@@ -593,29 +589,30 @@ void run_lsn(int *f, int *mu, int *B,int *D,int *R,int m, int n,int debug_level,
 			tb = MELT(B,p-1,firing_n-1,m,n); //B[p-1][firing_n-1]
 			td = MELT(D,p-1,firing_n-1,m,n); //D[p-1][firing_n-1]
 			//		#pragma omp critical
-			{
-				if(tb<0) {
-					mu[p-1] = mu[p-1]+td*fm;
-				} else {
-					mu[p-1] = mu[p-1]-tb*fm+td*fm;
-				}
+			if(tb<0) {
+				mu[p-1] = mu[p-1]+td*fm;
+			} else {
+				mu[p-1] = mu[p-1]-tb*fm+td*fm;
 			}
-
 			if(mu[p-1] < 0) {
 				err = ERR_OVERFLOW;
 				perr("10");
 				exit(1);
-			}
+			} else if(mu[p-1] != 0) dim++;
 		}
+
 
 		/*print current marking mu*/
 		if(debug_level==2 || s==smax) {
 			fprintf(fo,"the current marking mu is:\n");
 			if(printm==1) {
 				for(p=1; p<=m; p++) {
-					if(mu[p-1]!=0) fprintf(fo,"%dp%d+",mu[p-1],p);
+					if(mu[p-1]!=0) {
+						dim--;
+						fprintf(fo,"%dp%d",mu[p-1],p);
+						if(dim!=0)fprintf(fo,"+");
+					}
 				}
-				fprintf(fo,"END");
 			} else {
 				for(p=1; p<=m; p++) {
 					fprintf(fo,"%d ",mu[p-1]);
@@ -636,47 +633,68 @@ void run_lsn(int *f, int *mu, int *B,int *D,int *R,int m, int n,int debug_level,
 void printBDR(int m,int n,int *B,int *D,int *R,int debug_level,int rm,FILE *fo)
 {
 	int i,j;
-	if(debug_level>0 || !rm) {
-		fprintf(fo,"matrix of transition incoming arcs B:\n");
-		fprintf(fo,"（P\\T）\n");
+	if(debug_level>0 || !rm ) {
+		if(rm) {
+			fprintf(fo,"matrix of transition incoming arcs B:\n");
+			fprintf(fo,"（P\\T）\n");
+		}
 		for(i=0; i<m; i++) {
 			for(j=0; j<n; j++) {
 				fprintf(fo,"%d\t",MELT(B,i,j,m,n)); //B[i][j]
 			}
 			fprintf(fo,"\n");
 		}
-		fprintf(fo,"matrix of transition outgoing arcs D:\n");
-		fprintf(fo,"（P\\T）\n");
+		fprintf(fo,"\n");
+
+		if(rm) {
+			fprintf(fo,"matrix of transition outgoing arcs D:\n");
+			fprintf(fo,"（P\\T）\n");
+		}
 		for(i=0; i<m; i++) {
 			for(j=0; j<n; j++) {
 				fprintf(fo,"%d\t",MELT(D,i,j,m,n)); //D[i][j]
 			}
 			fprintf(fo,"\n");
 		}
-		fprintf(fo,"matrix of priority arcs R:\n");
-		fprintf(fo,"（T\\T）\n");
+		fprintf(fo,"\n");
+
+		if(rm) {
+			fprintf(fo,"matrix of priority arcs R:\n");
+			fprintf(fo,"（T\\T）\n");
+		}
 		for(i=0; i<n; i++) {
 			for(j=0; j<n; j++) {
 				fprintf(fo,"%d\t",MELT(R,i,j,m,n)); //R[i][j]
 			}
 			fprintf(fo,"\n");
 		}
+		fprintf(fo,"\n");
 	}
 }
 
 void printmk(int m, int *mu,int printm,FILE *fo)
 {
 	int p;
+	int c = 0;
+	for(p=1; p<=m; p++) {
+		if(mu[p-1]!=0) c++;
+	}
+
 	fprintf(fo,"The final marking is :\n");
 	if(printm==1) {
 		for(p=1; p<=m; p++) {
-			if(mu[p-1]!=0) fprintf(fo,"%dp%d+",mu[p-1],p);
+			if(mu[p-1]!=0) {
+				c--;
+				fprintf(fo,"%dp%d",mu[p-1],p);
+				if(c!=0)fprintf(fo,"+");
+			}
 		}
-		fprintf(fo,"END");
+		fprintf(fo,"\n");
 	} else {
 		for(p=1; p<=m; p++) {
 			fprintf(fo,"%d ",mu[p-1]);
 		}
 	}
+	if(fo != stdout ) fclose( fo );
 }
 //@ 2023 Qing Zhang: zhangq9919@163.com, Dmitry Zaitsev
