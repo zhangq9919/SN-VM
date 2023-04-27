@@ -70,7 +70,7 @@ Program options:
 
 -smax step: specified steps
 
--rm: print raw matices and vectors
+-rm: print raw matices and vectors as `MSN`
 
 Parameters:
 -----------
