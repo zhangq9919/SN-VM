@@ -204,8 +204,8 @@ int main(int argc,char *argv[])
 	/*print final marking*/
 	printmk(m,mu,printm,fo);
 	t2=magma_wtime();
-	fprintf(stderr,"####LSN information has been created!####\n ");
-	fprintf(stderr,"####The total time is %#fs\n", t2-t1 );
+	printf("####LSN information has been created!####\n ");
+	printf("####The total time is %#fs\n", t2-t1 );
 
 	free(B);
 	free(D);
@@ -372,7 +372,7 @@ void read_lsn(int m,int n,int k,int l,int NST,int v1,int v2,int v3,int digit,int
 			fprintf(fo,"%d ",mu[p-1]);
 		}
 		fprintf(fo,"\n");
-		fprintf(stderr,"###The raw m, n, matrices and vectors have been generated!\n");
+		printf("###The raw m, n, matrices and vectors have been generated!\n");
 		exit(1);
 	}
 
@@ -621,7 +621,7 @@ void run_lsn(int *f, int *mu, int *B,int *D,int *R,int m, int n,int debug_level,
 			}
 			fprintf(fo,"\n");
 			if(s==smax) {
-				fprintf(stderr,"###The result has been created! Specifies that the number of steps is %ld\n",smax);
+				printf("###The result has been created! Specifies that the number of steps is %ld\n",smax);
 				fprintf(fo,"###The result has been created! Specifies that the number of steps is %ld\n",smax);
 				exit(1);
 			}
@@ -695,6 +695,7 @@ void printmk(int m, int *mu,int printm,FILE *fo)
 		for(p=1; p<=m; p++) {
 			fprintf(fo,"%d ",mu[p-1]);
 		}
+		fprintf(fo,"\n");
 	}
 	if(fo != stdout ) fclose( fo );
 }
