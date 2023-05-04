@@ -493,7 +493,7 @@ void run_lsn(int *f, int *mu, int *B,int *D,int *R,int m, int n,int debug_level,
 	int firable = 0;//multiplicity of fireable transition 可触发变迁的权重
 	//int firable_m = INT_MAX; //the minimum multiplicity of fireable transition 可触发变迁权重的最小值
 	int rn; //random number
-	int firing_n; //firing transition number  正在触发的变迁个数
+	int firing_n; //firing transition number  正在触发的变迁编号 
 	int l; //remainder 余数
 	int tb,td; //columns of matrix B and D
 	int ct; // count of fireable transitions
@@ -637,7 +637,7 @@ void printBDR(int m,int n,int *B,int *D,int *R,int debug_level,int rm,FILE *fo)
 	if(debug_level>0 || !rm ) {
 		if(rm) {
 			fprintf(fo,"matrix of transition incoming arcs B:\n");
-			fprintf(fo,"（P\\T）\n");
+			fprintf(fo,"(P\\T)\n");
 		}
 		for(i=0; i<m; i++) {
 			for(j=0; j<n; j++) {
@@ -649,7 +649,7 @@ void printBDR(int m,int n,int *B,int *D,int *R,int debug_level,int rm,FILE *fo)
 
 		if(rm) {
 			fprintf(fo,"matrix of transition outgoing arcs D:\n");
-			fprintf(fo,"（P\\T）\n");
+			fprintf(fo,"(P\\T)\n");
 		}
 		for(i=0; i<m; i++) {
 			for(j=0; j<n; j++) {
@@ -661,7 +661,7 @@ void printBDR(int m,int n,int *B,int *D,int *R,int debug_level,int rm,FILE *fo)
 
 		if(rm) {
 			fprintf(fo,"matrix of priority arcs R:\n");
-			fprintf(fo,"（T\\T）\n");
+			fprintf(fo,"(T\\T)\n");
 		}
 		for(i=0; i<n; i++) {
 			for(j=0; j<n; j++) {
