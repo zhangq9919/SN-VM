@@ -6,7 +6,7 @@ Sleptsov net Virtual Machine(SN-VM) - usual multicore software for running low-l
 
 Sleptsov net virtual machine is implemented as a software interpreter of SN behavior, which can load the transitions, arcs and tokens of LSN. SNVM implements the concurrent firing of transitions in multiple instances in a single step.
 
-How to use `SN-VM-GPU` as a part of experimental `SNC IDE&VM`:
+How to use `SN-VM` as a part of experimental `SNC IDE&VM`:
 --------------------------------------------------------------
 
 We list references to components in "Compatibility" section.
