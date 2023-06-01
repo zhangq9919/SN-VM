@@ -24,7 +24,7 @@
 #define MELT(x,i,j,d1,d2) (*((x)+MOFF(i,j,d1,d2)))
 #define SKIP_COMM  do{fgets(input_buffer,MAXSTRLEN,fi);} while(input_buffer[0]==';');//skip comments  
 
-/*Declare error code 声明错误代码*/
+/*Declare error code*/
 #define NO_ERR 0 /* No error */
 #define ERR_NEGATIVE 1 /* Wrong header(m n k l): negative numbers */
 #define ERR_LESS 2 /* Wrong header(m n k l): The number is less than 4 or non-numeric*/
@@ -39,7 +39,7 @@
 
 
 static char Help[] =
-  "Lsn Processor\n"
+  "LSN Virtual Machine\n"
   "action: run low-level sleptsov net\n"
   "        on multicore parallel architectures using OpenMP.\n"
   "usage:          lsn_pro_level [-h]\n"
@@ -77,35 +77,30 @@ double magma_wtime( void )
 }
 
 /**
-函数：根据错误代码输出错误信息
 Function: Output error information according to the error code.
 **/
 void perr(char* info);
 
 
 /**
-函数：生成优先弧链矩阵
 Function: Generate a matrix of priority arc chains.
 **/
 void priority_chain(int *R,int n,int nth);
 
 
-/**
-函数：解析命令行
+/**
 Function: Parse command line.
 **/
 int command(int numf,int snumf,int argc,int *nth,int *debug_level,int *o,int *printm,long int *smax,int *rm,char *argv[]);
 
 
 /**
-函数: 为矩阵和向量分配空间
 Function: Allocate space for matrices and vector.
  **/
 int allocate(int *m,int *n,int *k,int *l,int *NST,int **mu,int **f,int **B,int **D,int **R,FILE *fi,char input_buffer[]);
 
 
 /**
-函数：读LSN文件,包括读header,读弧，读初始标记
 Function: Read LSN file, including header, arcs, initial marking.
 **/
 void read_lsn(int m,int n,int k,int l,int NST,int v1,int v2,int v3,int digit,int *mu,int *f,int *B,int *D,int *R,int debug_level,int nth,int printm,int rm,FILE *fi,FILE *fo,char input_buffer[]);
@@ -117,7 +112,6 @@ Matrix and vector initialization
 void zeroBDRmu(int m,int n,  int *mu,int *f,int *B,int *D,int *R);
 
 /**
-函数：根据LSN文件格式读弧的信息，并生成优先弧矩阵，一对变迁输入弧和变迁输出弧矩阵
 Function: Read the arcs information according to the LSN file format, and generate the priority arc matrix R,
 a pair of matrices B and D are matrices of incoming and outgoing arcs of transitions.
 
@@ -130,14 +124,12 @@ void read_arc( int v1, int v2, int v3,int m,int n,int *B,int *D, int *R,int debu
 
 
 /**
-函数：读库所数 - m，变迁数 - n，弧的数量 - k,marking中非零数 - l,替换变迁个数 - NST
 Function: Read the number of places, the number of transitions, the number of arcs, nonzero number of marking, number of substitution transition (0 for LSN)
 **/
 void read_mnkl(int m,int n,int k,int l,int NST,int digit,int rm,int debug_level,FILE *fo);
 
 
 /**
-函数：SN VM根据SN触发规则运行LSN
 SN Virtual Machine: Run LSN according to the SN firing rule
 Include:
 Algorithm1: the multiplicity of fireable transitions
@@ -161,7 +153,7 @@ int main(int argc,char *argv[])
 	int v1,v2,v3;//p t w
 	int *B = NULL,*D = NULL;//input matrix & output matrix
 	int *R = NULL;//Priority arc matrix
-	int *f = NULL;// indicator of fireable transitions 触发变迁的指标(0 or any numbers)
+	int *f = NULL;// indicator of fireable transitions 0 or any numbers)
 	int *mu; // marking (should be inputted from file)
 	int p;//place
 	int digit = 0;
@@ -216,17 +208,17 @@ int main(int argc,char *argv[])
 } /*main*/
 
 
-//输出错误信息
+//Output error information according to the error code.
 void perr(char* info)
 {
 	if( info ) {
-		fprintf(stderr,"Error %s：%s\n",info,errmsg[err]);
+		fprintf(stderr,"Error %s锛?s\n",info,errmsg[err]);
 		return;
 	}
-	fprintf(stderr,"Error %s：%s\n",info,errmsg[err]);
+	fprintf(stderr,"Error %s锛?s\n",info,errmsg[err]);
 }
 
-//生成优先弧链矩阵
+//Generate a matrix of priority arc chains.
 void priority_chain(int *R,int n,int nth)
 {
 	int x,y,z;
@@ -244,7 +236,7 @@ void priority_chain(int *R,int n,int nth)
 	}
 }
 
-//解析命令行
+//Parse command line.
 int command(int numf,int snumf,int argc,int *nth,int *debug_level,int *o,int *printm,long int *smax,int *rm,char *argv[])
 {
 	int i;
@@ -332,6 +324,7 @@ int allocate(int *m,int *n,int *k,int *l,int *NST,int **mu,int **f,int **B,int *
 	return digit;
 }
 
+/* Matrix and vector initialization*/
 void zeroBDRmu(int m,int n,int *mu,int *f,int *B,int *D,int *R)
 {
 	memset(B,0,MATRIX_SIZE(m,n,int));
@@ -341,6 +334,7 @@ void zeroBDRmu(int m,int n,int *mu,int *f,int *B,int *D,int *R)
 	memset(f,0,n*sizeof(int));
 }
 
+/* Read LSN file, including header, arcs, initial marking.*/
 void read_lsn(int m,int n,int k,int l,int NST,int v1,int v2,int v3,int digit,int *mu,int *f,int *B,int *D,int *R,int debug_level,int nth,int printm,int rm,FILE *fi,FILE *fo,char input_buffer[])
 {
 	int i,p;
@@ -378,7 +372,7 @@ void read_lsn(int m,int n,int k,int l,int NST,int v1,int v2,int v3,int digit,int
 
 }
 
-//读库所数，变迁数和弧的数量,marking中非零个数
+//read header
 void read_mnkl(int m,int n,int k,int l,int NST,int digit,int rm,int debug_level,FILE *fo)
 {
 	if(m < 0 || n < 0 || k < 0 ) {
@@ -399,7 +393,7 @@ void read_mnkl(int m,int n,int k,int l,int NST,int digit,int rm,int debug_level,
 	if(debug_level > 0&&rm) fprintf(fo,"m=%d n=%d k=%d l=%d NST=%d\n",m,n,k,l,NST);
 }
 
-//读弧的信息
+//read arcs information
 void read_arc( int v1, int v2, int v3,int m,int n,int *B,int *D, int *R,int debug_level,int rm,FILE *fo)
 {
 	int a, b;
@@ -485,19 +479,20 @@ void read_arc( int v1, int v2, int v3,int m,int n,int *B,int *D, int *R,int debu
 	}
 }
 
+/* SN-VM*/
 void run_lsn(int *f, int *mu, int *B,int *D,int *R,int m, int n,int debug_level, int nth,int printm,FILE *fo,long int smax)
 {
-	long int s = 0;// current step number 当前步骤数
-	int nf;// number of fireable transitions 可触发变迁的总数
+	long int s = 0;// current step number 
+	int nf;// number of fireable transitions 
 	int p, t;// place, transition
-	int firable = 0;//multiplicity of fireable transition 可触发变迁的权重
-	//int firable_m = INT_MAX; //the minimum multiplicity of fireable transition 可触发变迁权重的最小值
+	int firable = 0;//multiplicity of fireable transition 
+	//int firable_m = INT_MAX; //the minimum multiplicity of fireable transition 
 	int rn; //random number
-	int firing_n; //firing transition number  正在触发的变迁编号 
-	int l; //remainder 余数
+	int firing_n; //firing transition number  
+	int l; //remainder 
 	int tb,td; //columns of matrix B and D
 	int ct; // count of fireable transitions
-	int fm; //正在触发变迁的权重 multiplicity of firing transition
+	int fm; //multiplicity of firing transition
 	int i,j;
 
 	//steps
@@ -522,7 +517,7 @@ void run_lsn(int *f, int *mu, int *B,int *D,int *R,int m, int n,int debug_level,
 					if( MELT(B,p-1,t-1,m,n)<0) {// inhibitor arc   B[p-1][t-1]<0
 						if( mu[p-1]>0 )//if mu > 0, fireable=0
 							firable = 0;
-						else  firable = INT_MAX;// if mu < 0, fireable= ∞
+						else  firable = INT_MAX;// if mu < 0, fireable= int_max
 					} else firable = INT_MAX;
 				}
 
@@ -533,15 +528,15 @@ void run_lsn(int *f, int *mu, int *B,int *D,int *R,int m, int n,int debug_level,
 			f[t-1] = firable_m;
 		}
 
-		/*Algorithm3: Remove Low Priority Transition 移除低优先级的变迁 */
+		/*Algorithm3: Remove Low Priority Transition */
 		#pragma omp parallel for private(i,j) num_threads(nth)
 		for(i = 1; i <= n; i++) {
 			#pragma omp simd
 #pragma unroll
 			for(j = 1; j <= n; j++) {
 				if(MELT(R,i-1,j-1,n,n) > 0 && f[i - 1] != 0) { //R[i-1][j-1] > 0
-					f[j - 1] = 0;  //置0，使其不触发
-					//MELT(R,i-1,j-1,n,n) = 0;//令 R[i-1][j-1] = 0，下一步中不再移除低优先级的弧
+					f[j - 1] = 0;  
+					//MELT(R,i-1,j-1,n,n) = 0;//R[i-1][j-1] = 0
 				}
 			}
 		}
@@ -560,14 +555,13 @@ void run_lsn(int *f, int *mu, int *B,int *D,int *R,int m, int n,int debug_level,
 		/*choose random fireable transition t*/
 		ct = 0;
 		rn = rand();
-		l  = rn%nf;//余数为0，则选择触发变迁t为第一个不为0的变迁； 余数为1，则为第二个，以此类推
+		l  = rn%nf;
 		for(t=1; t<=n; t++) {
 			if(f[t-1]>0) {
 				if(l==ct) {
 					firing_n = t;
 					break;
 				}
-				//ct作为指针，指代第0个...第n-1个变迁，只有当第ct个变迁(f[t-1])触发，且余数等于ct时,选择此变迁为firing_n
 				ct++;
 			}
 		}
@@ -631,6 +625,7 @@ void run_lsn(int *f, int *mu, int *B,int *D,int *R,int m, int n,int debug_level,
 
 }
 
+/* output matrices*/
 void printBDR(int m,int n,int *B,int *D,int *R,int debug_level,int rm,FILE *fo)
 {
 	int i,j;
@@ -673,6 +668,7 @@ void printBDR(int m,int n,int *B,int *D,int *R,int debug_level,int rm,FILE *fo)
 	}
 }
 
+/* output marking*/
 void printmk(int m, int *mu,int printm,FILE *fo)
 {
 	int p;
