@@ -7,7 +7,7 @@
 // >arcs                                                                        //
 // >initial marking: p mu                                                       //
 // Command line:                                                                //
-// snvm lsn_file.lsn output_file.txt                                            //
+// SNVM lsn_file.lsn output_file.txt                                            //
 // -fopenmp -O3                                                                 //
 //@ 2023 Qing Zhang: zhangq9919@163.com, Dmitry Zaitsev                         //
 //////////////////////////////////////////////////////////////////////////////////
@@ -27,15 +27,16 @@
 /*Declare error code*/
 #define NO_ERR 0 /* No error */
 #define ERR_NEGATIVE 1 /* Wrong header(m n k l): negative numbers */
-#define ERR_LESS 2 /* Wrong header(m n k l): The number is less than 4 or non-numeric*/
-#define ERR_H_ZERO 3 /* Wrong header(m n k l): Value zero */
-#define ERR_A_ZERO 4 /* Wrong arc: Value zero */
+#define ERR_LESS 2 /* Wrong header(m n k l): The number is less than 5 or non-numeric*/
+#define ERR_HEADER_ZERO 3 /* Wrong header(m n k l): Value zero */
+#define ERR_ARC_ZERO 4 /* Wrong arc: Value zero */
 #define ERR_FORMAT 5 /* Wrong arc: Arc format error */
 #define ERR_INHIBITOR 6 /* Wrong arc: The weight of inhibitior arc is not -1 */
 #define ERR_EXCEEDM 7 /* Exceed number: Exceed the number of m */
 #define ERR_EXCEEDN 8 /* Exceed number: Exceed the number of n */
 #define ERR_DUP 9 /* Duplicate arc: The arc is duplicate */
 #define ERR_OVERFLOW 10 /* Numeric overflow: The value is out of range */
+#define ERR_NST 11 /* Wrong header: NST is nonzero */
 
 
 static char Help[] =
@@ -43,29 +44,32 @@ static char Help[] =
   "action: run low-level sleptsov net\n"
   "        on multicore parallel architectures using OpenMP.\n"
   "usage:          lsn_pro_level [-h]\n"
-  "                              [-d][-nth][-pm][-smax][-spm][-rm][-r][lsn_file.lsn][output_file.txt]\n"
-  "-d                            Output data level (0 or 1 or 2)\n"
-  "-nth                          number of thread\n"
-  "-pm                           choose format for printing marking (0 - usual or 1 - sparse vector)\n"
-  "-smax                         specified steps\n"
-  "-spm                          choose format for printing matrix (0 - usual or 1 - sparse matrix)\n"
-  "-rm                           print raw matices and vectors\n"
-  "-r                            Sleptsov net rule\n"
-  "-lsntonet                     save lsn as .net\n"
-  "lsn_file.lsn                  Low-level sleptsov net file based on LSN format\n"
-  "output_file.txt               The result of the LSN running through SN Virtual Machine\n";
+  "                              [-d][-nth][-pm][-smax][-rm][-r][-lsntonet]\n"
+  "                              [lsn_file.lsn][output_file.txt]\n"
+  "FLAGS               WHAT                                                                       DEFAULT\n"
+  "-h                  this mode\n"
+  "-d n                Output data level (n = 0 or 1 or 2)                                        -d 0\n"
+  "-nth n              number of thread                                                           -nth 8\n"
+  "-pm n               choose format for printing marking (n = 0 - usual or 1 - sparse vector)    -pm 1\n"
+  "-smax n             specified steps (n = steps)\n"
+  "-rm                 print raw matices and vectors\n"
+  "-r                  Sleptsov net rule\n"
+  "-lsntonet           save lsn as .net\n"
+  "lsn_file.lsn        Low-level sleptsov net file based on LSN format (stdin if absent)           stdin\n"
+  "output_file.txt     The result of the LSN running through SN Virtual Machine (stdout if absent) stdout\n";
 
 char* errmsg[] = {        /* 0 */ "No Error",
-                                  /* 1 */ "Wrong header: Negative numbers",
-                                  /* 2 */ "Wrong header: The number is less than 5 or non-numeric",
-                                  /* 3 */ "Wrong header: Value zero",
-                                  /* 4 */ "Wrong arc: The arc has value zero",
-                                  /* 5 */ "Wrong arc: Arc format error",
-                                  /* 6 */ "Wrong arc: The weight of inhibitior arc is not -1",
-                                  /* 7 */ "Exceed number: Exceed the number of m",
-                                  /* 8 */ "Exceed number: Exceed the number of n",
-                                  /* 9 */	"Duplicate arc: The arc is duplicate",
-                                  /* 10 */ "Numeric overflow: The value is out of range",
+                                  /* 1 */ "Wrong header: Negative numbers!",
+                                  /* 2 */ "Wrong header: The number is less than 5 or non-numeric!",
+                                  /* 3 */ "Wrong header: Value zero!",
+                                  /* 4 */ "Wrong arc: The arc has value zero!",
+                                  /* 5 */ "Wrong arc: Arc format error!",
+                                  /* 6 */ "Wrong arc: The weight of inhibitior arc is not -1!",
+                                  /* 7 */ "Exceed number: Exceed the number of m!",
+                                  /* 8 */ "Exceed number: Exceed the number of n!",
+                                  /* 9 */	"Duplicate arc: The arc is duplicate!",
+                                  /* 10 */ "Numeric overflow: The value is out of range!",
+                                  /* 11 */ "Wrong header: NST is nonzero!",
                  };
 
 // declare global variables
@@ -300,6 +304,19 @@ int allocate(int *m,int *n,int *k,int *l,int *NST,int **mu,int **f,int **B,int *
 {
 	SKIP_COMM
 	int digit = sscanf(input_buffer,"%d %d %d %d %d",m,n,k,l,NST);
+
+	//check the number of n and m
+	if(*m < 0 || *n < 0) {
+		err = ERR_NEGATIVE;
+		perr("1");
+		exit(1);
+	}
+	if(*m == 0 || *n == 0) {
+		err = ERR_HEADER_ZERO;
+		perr("3");
+		exit(1);
+	}
+
 	*B = (int *)malloc( MATRIX_SIZE(*m,*n,int) );
 	*D = (int *)malloc( MATRIX_SIZE(*m,*n,int) );
 	*R = (int *)malloc( MATRIX_SIZE(*n,*n,int) );
@@ -362,8 +379,8 @@ void read_lsn(int m,int n,int k,int l,int NST,int v1,int v2,int v3,int digit,int
 		if(debug_level>0&&rm) fprintf(fo,"%d %d\n",v1,v2);
 	}
 	if(fi != stdin ) fclose( fi );
-	
-		/* save .lsn to .net*/
+
+	/* save .lsn to .net*/
 	if(!lsntonet) {
 		for(j=1; j<=n; j++) {
 			fprintf(fo,"tr t%d ",j);
@@ -400,10 +417,10 @@ void read_lsn(int m,int n,int k,int l,int NST,int v1,int v2,int v3,int digit,int
 
 		fprintf(fo,"net bz\n");
 		printf("#####Save .lsn to .net!\n");
-		exit(1);
+		exit(0);
 	}
-	
-	
+
+
 	/*call function about priority arc chain*/
 	priority_chain(R,n,nth);
 
@@ -415,7 +432,7 @@ void read_lsn(int m,int n,int k,int l,int NST,int v1,int v2,int v3,int digit,int
 		}
 		fprintf(fo,"\n");
 		printf("###The raw m, n, matrices and vectors have been generated!\n");
-		exit(1);
+		exit(0);
 	}
 
 }
@@ -428,13 +445,20 @@ void read_mnkl(int m,int n,int k,int l,int NST,int digit,int rm,int debug_level,
 		perr("1");
 		exit(1);
 	}
+
+	if(NST!=0) {
+		err = ERR_NST;
+		perr("11");
+		exit(1);
+	}
+
 	if(digit != 5 ) {
 		err = ERR_LESS;
 		perr("2");
 		exit(1);
 	}
 	if(m == 0 || n == 0 || k == 0) {
-		err = ERR_H_ZERO;
+		err = ERR_HEADER_ZERO;
 		perr("3");
 		exit(1);
 	}
@@ -447,7 +471,7 @@ void read_arc( int v1, int v2, int v3,int m,int n,int *B,int *D, int *R,int debu
 	int a, b;
 	if(debug_level > 0&&rm)  fprintf(fo,"%d %d %d\n",v1,v2,v3);
 	if(v1 == 0 || v2 == 0) {
-		err = ERR_A_ZERO;
+		err = ERR_ARC_ZERO;
 		perr("4");
 		exit(1);
 	}
@@ -482,6 +506,7 @@ void read_arc( int v1, int v2, int v3,int m,int n,int *B,int *D, int *R,int debu
 		}
 		if(v3<0) {
 			if(v3 != -1 ) {
+				fprintf(stderr,"Warning: arc %d %d %d\n",v1,v2,v3);
 				err = ERR_INHIBITOR;
 				perr("6");
 				exit(1);
@@ -490,6 +515,12 @@ void read_arc( int v1, int v2, int v3,int m,int n,int *B,int *D, int *R,int debu
 			if(debug_level==2&&rm) {
 				fprintf(fo,"inhibitor arc from place %d to transition %d\n",v1,v2);        //v3 is negative,it is inhibitor
 			}
+		}
+		if(v3==0) {
+			fprintf(stderr,"Warning: arc %d %d %d\n",v1,v2,v3);
+			err = ERR_FORMAT;
+			perr("5");
+			exit(1);
 		}
 	} else if(v2 < 0) {
 		if(v3 != 0) {
@@ -665,7 +696,7 @@ void run_lsn(int *f, int *mu, int *B,int *D,int *R,int m, int n,int debug_level,
 			if(s==smax) {
 				printf("###The result has been created! Specifies that the number of steps is %ld\n",smax);
 				fprintf(fo,"###The result has been created! Specifies that the number of steps is %ld\n",smax);
-				exit(1);
+				exit(0);
 			}
 		}
 
