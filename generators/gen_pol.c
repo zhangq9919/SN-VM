@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#define rand_term (rand()%10+1)   //Éú³ÉËæ»úÊı1-10·¶Î§ 
+#define rand_term (rand()%10+1)   //generate random number in 1-10
 
 int main(int argc, char *argv[])
 {
@@ -19,6 +19,8 @@ int main(int argc, char *argv[])
 	int r,t,off;
 	int x = rand_term;
 	int c = k;
+	int sum = 0; 
+
 	FILE *f;
 	f = fopen(argv[2], "w" );
 	if(k==0) {
@@ -28,10 +30,10 @@ int main(int argc, char *argv[])
 
 
 	// making
-	//Start 1¸ö
+	//Start 1ä¸ª
 	mu[0] = 0;
 	//fprintf(f,"%d ", 0); // mu(p_1)
-	//Finish nt¸ö
+	//Finish ntä¸ª
 	for(t=1; t<=nt; t++)
 		{mu[t] = 1;
 		}
@@ -41,18 +43,22 @@ int main(int argc, char *argv[])
 		r=rand_term;//ak
 		//fprintf(f,"%d ", r); // mu(p_{nt+2})
 		mu[++ntt] = r;
+			int mul = 1;
 		for(t=1; t<=c; t++) {
 			//fprintf(f,"%d %d ",x,0);//mu{p_nt+3}.....mu{p_}
 			mu[++ntt] = x;
 			mu[++ntt] = 0;
+			mul*=x;
 		}
+		sum=r*mul+sum; 
 		if(c<k)	mu[++ntt] = 0;
-		//fprintf(f,"%d ",0);//ak²»ĞèÒª¶àÒ»¸ö0´æ·Å½á¹û
+		//fprintf(f,"%d ",0);//akä¸éœ€è¦å¤šä¸€ä¸ª0å­˜æ”¾ç»“æœ
 		c--;
 	}
 	r=rand_term;
 	mu[++ntt] = r;
 	mu[++ntt] = 0;
+	sum=sum+r;
 	//fprintf(f,"%d %d ", r,0); //a1
 	//fprintf(f,"\n");
 
@@ -130,7 +136,8 @@ int main(int argc, char *argv[])
 	fprintf(f,"%d %d\n", -t1,4);
 	fprintf(f,"%d %d\n", -(t1+1),-5);
 	
-	fprintf(f,"; The result should be in p%d\n",p[2]+3);
+	fprintf(f,"; When n = %d, the polynomial result is in p[%d] = %d\n",k,p[2]+3,sum);
+	printf("When n = %d, the polynomial result is in p[%d] = %d\n",k,p[2]+3,sum);
+//	fprintf(f,"; The result should be %d\n",sum);
 
 }
-
