@@ -7,7 +7,7 @@
 // >arcs                                                                        //
 // >initial marking: p mu                                                       //
 // Command line:                                                                //
-// SNVM lsn_file.lsn output_file.txt                                            //
+// snvm lsn_file.lsn output_file.txt                                            //
 // -fopenmp -O3                                                                 //
 //@ 2023 Qing Zhang: zhangq9919@163.com, Dmitry Zaitsev                         //
 //////////////////////////////////////////////////////////////////////////////////
@@ -26,17 +26,16 @@
 
 /*Declare error code*/
 #define NO_ERR 0 /* No error */
-#define ERR_NEGATIVE 1 /* Wrong header(m n k l): negative numbers */
-#define ERR_LESS 2 /* Wrong header(m n k l): The number is less than 5 or non-numeric*/
-#define ERR_HEADER_ZERO 3 /* Wrong header(m n k l): Value zero */
-#define ERR_ARC_ZERO 4 /* Wrong arc: Value zero */
+#define ERR_NEGATIVE 1 /* Wrong header(m n k l nst): negative numbers */
+#define ERR_LESS 2 /* Wrong header(m n k l nst): The number is less than 5 or non-numeric*/
+#define ERR_H_ZERO 3 /* Wrong header(m n k l nst): Value zero */
+#define ERR_A_ZERO 4 /* Wrong arc: Value zero */
 #define ERR_FORMAT 5 /* Wrong arc: Arc format error */
 #define ERR_INHIBITOR 6 /* Wrong arc: The weight of inhibitior arc is not -1 */
 #define ERR_EXCEEDM 7 /* Exceed number: Exceed the number of m */
 #define ERR_EXCEEDN 8 /* Exceed number: Exceed the number of n */
 #define ERR_DUP 9 /* Duplicate arc: The arc is duplicate */
 #define ERR_OVERFLOW 10 /* Numeric overflow: The value is out of range */
-#define ERR_NST 11 /* Wrong header: NST is nonzero */
 
 
 static char Help[] =
@@ -44,32 +43,27 @@ static char Help[] =
   "action: run low-level sleptsov net\n"
   "        on multicore parallel architectures using OpenMP.\n"
   "usage:          lsn_pro_level [-h]\n"
-  "                              [-d][-nth][-pm][-smax][-rm][-r][-lsntonet]\n"
-  "                              [lsn_file.lsn][output_file.txt]\n"
-  "FLAGS               WHAT                                                                       DEFAULT\n"
-  "-h                  this mode\n"
-  "-d n                Output data level (n = 0 or 1 or 2)                                        -d 0\n"
-  "-nth n              number of thread                                                           -nth 8\n"
-  "-pm n               choose format for printing marking (n = 0 - usual or 1 - sparse vector)    -pm 1\n"
-  "-smax n             specified steps (n = steps)\n"
-  "-rm                 print raw matices and vectors\n"
-  "-r                  Sleptsov net rule\n"
-  "-lsntonet           save lsn as .net\n"
-  "lsn_file.lsn        Low-level sleptsov net file based on LSN format (stdin if absent)           stdin\n"
-  "output_file.txt     The result of the LSN running through SN Virtual Machine (stdout if absent) stdout\n";
+  "                              [-d][-nth][-pm][-smax][-wm][-r][lsn_file.lsn][output_file.txt]\n"
+  "-d                            Output data level (0 or 1 or 2)\n"
+  "-nth                          number of thread\n"
+  "-pm                           choose format for printing marking (0 - usual or 1 - sparse vector)\n"
+  "-smax                         specified steps\n"
+  "-rm                           print raw matices and vectors\n"
+  "-r                            Sleptsov net rule\n"
+  "lsn_file.lsn                  Low-level sleptsov net file based on LSN format\n"
+  "output_file.txt               The result of the LSN running through SN Virtual Machine\n";
 
 char* errmsg[] = {        /* 0 */ "No Error",
-                                  /* 1 */ "Wrong header: Negative numbers!",
-                                  /* 2 */ "Wrong header: The number is less than 5 or non-numeric!",
-                                  /* 3 */ "Wrong header: Value zero!",
-                                  /* 4 */ "Wrong arc: The arc has value zero!",
-                                  /* 5 */ "Wrong arc: Arc format error!",
-                                  /* 6 */ "Wrong arc: The weight of inhibitior arc is not -1!",
-                                  /* 7 */ "Exceed number: Exceed the number of m!",
-                                  /* 8 */ "Exceed number: Exceed the number of n!",
-                                  /* 9 */	"Duplicate arc: The arc is duplicate!",
-                                  /* 10 */ "Numeric overflow: The value is out of range!",
-                                  /* 11 */ "Wrong header: NST is nonzero!",
+                                  /* 1 */ "Wrong header: Negative numbers",
+                                  /* 2 */ "Wrong header: The number is less than 5 or non-numeric",
+                                  /* 3 */ "Wrong header: Value zero",
+                                  /* 4 */ "Wrong arc: The arc has value zero",
+                                  /* 5 */ "Wrong arc: Arc format error",
+                                  /* 6 */ "Wrong arc: The weight of inhibitior arc is not -1",
+                                  /* 7 */ "Exceed number: Exceed the number of m",
+                                  /* 8 */ "Exceed number: Exceed the number of n",
+                                  /* 9 */	"Duplicate arc: The arc is duplicate",
+                                  /* 10 */ "Numeric overflow: The value is out of range",
                  };
 
 // declare global variables
@@ -97,7 +91,7 @@ void priority_chain(int *R,int n,int nth);
 /**
 Function: Parse command line.
 **/
-int command(int numf,int snumf,int argc,int *nth,int *debug_level,int *o,int *printm,long int *smax,int *rm,int *lsntonet,char *argv[]);
+int command(int numf,int snumf,int argc,int *nth,int *debug_level,int *o,int *printm,long int *smax,int *rm,char *argv[]);
 
 
 /**
@@ -109,7 +103,7 @@ int allocate(int *m,int *n,int *k,int *l,int *NST,int **mu,int **f,int **B,int *
 /**
 Function: Read LSN file, including header, arcs, initial marking.
 **/
-void read_lsn(int m,int n,int k,int l,int NST,int v1,int v2,int v3,int digit,int *mu,int *f,int *B,int *D,int *R,int debug_level,int nth,int printm,int rm,int lsntonet,FILE *fi,FILE *fo,char input_buffer[]);
+void read_lsn(int m,int n,int k,int l,int NST,int v1,int v2,int v3,int digit,int *mu,int *f,int *B,int *D,int *R,int debug_level,int nth,int printm,int rm,FILE *fi,FILE *fo,char input_buffer[]);
 
 
 /**
@@ -144,7 +138,7 @@ Algorithm3: Remove Low Priority Transition
 **/
 void run_lsn(int *f, int *mu, int *B,int *D,int *R,int m, int n,int debug_level, int nth,int printm,FILE *fo,long int smax);
 
-void printBDR(int m,int n,int *B,int *D,int *R,int debug_level,int rm,int *mu,int lsntonet,FILE *fo);
+void printBDR(int m,int n,int *B,int *D,int *R,int debug_level,int rm,FILE *fo);
 
 void printmk(int m,  int *mu,int printm,FILE *fo);
 
@@ -159,7 +153,7 @@ int main(int argc,char *argv[])
 	int v1,v2,v3;//p t w
 	int *B = NULL,*D = NULL;//input matrix & output matrix
 	int *R = NULL;//Priority arc matrix
-	int *f = NULL;// indicator of fireable transitions 0 or any numbers)
+	int *f = NULL;// indicator of fireable transitions (0 or any numbers)
 	int *mu; // marking (should be inputted from file)
 	int p;//place
 	int digit = 0;
@@ -168,7 +162,6 @@ int main(int argc,char *argv[])
 	int printm=1;//choose format for printing marking (0-usual or 1-sparse vector) -pm
 	long int smax;//-smax
 	int rm = 1;//-rm
-	int lsntonet = 1;//-lsntonet
 	int ii = 0;//pointer
 	int numf,snumf;
 	double t1,t2;
@@ -177,7 +170,7 @@ int main(int argc,char *argv[])
 	char input_buffer[MAXSTRLEN + 1];
 
 	/* parse command line */
-	command(numf,snumf,argc,&nth,&debug_level,&o,&printm,&smax,&rm,&lsntonet,argv);
+	command(numf,snumf,argc,&nth,&debug_level,&o,&printm,&smax,&rm,argv);
 	/*lsn_ile.lsn & output_file.txt*/
 	if( argv[ o ]==NULL ) fi = stdin;
 	else fi = fopen( argv[ o ], "r" );
@@ -195,9 +188,9 @@ int main(int argc,char *argv[])
 	digit = allocate(&m,&n,&k,&l,&NST,&mu,&f,&B,&D,&R,fi,input_buffer);
 	t1=magma_wtime();
 	/*read LSN file*/
-	read_lsn(m,n,k,l,NST,v1,v2,v3,digit,mu,f,B,D,R,debug_level,nth,printm,rm,lsntonet,fi,fo,input_buffer);
+	read_lsn(m,n,k,l,NST,v1,v2,v3,digit,mu,f,B,D,R,debug_level,nth,printm,rm,fi,fo,input_buffer);
 	/*print matrices B D R*/
-	printBDR(m,n,B,D,R,debug_level,rm,mu,lsntonet,fo);
+	printBDR(m,n,B,D,R,debug_level,rm,fo);
 	/*SN Virtual Machine: run LSN according to firing rule of SN*/
 	run_lsn(f,mu,B,D,R,m,n,debug_level,nth,printm,fo,smax);
 	/*print final marking*/
@@ -228,23 +221,39 @@ void perr(char* info)
 //Generate a matrix of priority arc chains.
 void priority_chain(int *R,int n,int nth)
 {
-	int x,y,z;
-	#pragma omp parallel for private(x,y,z) num_threads(nth)
-	for ( x = 0; x < n; x++) {
-		for ( y = 0; y < n; y++) {
-			if (MELT(R,x,y,n,n) != 0) {
-				for ( z = 0; z < n; z++) {
-					if (MELT(R,y,z,n,n) != 0) {
-						MELT(R,x,z,n,n) = 1;
-					}
-				}
-			}
-		}
-	}
+ int x, y, z;
+
+    // lower triangle
+    #pragma omp parallel for private(x,y,z) num_threads(nth)
+    for (x = 0; x < n; x++) {
+        for (y = 0; y < x; y++) {
+            if (MELT(R,x,y,n,n) != 0) {
+                for (z = 0; z < n; z++) {
+                    if (MELT(R,y,z,n,n) != 0) {
+                        MELT(R,x,z,n,n) = 1;
+                    }
+                }
+            }
+        }
+    }
+
+    // upper triangle
+    #pragma omp parallel for private(x,y,z) num_threads(nth)
+    for (x = 0; x < n; x++) {
+        for (y = x + 1; y < n; y++) {
+            if (MELT(R,x,y,n,n) != 0) {
+                for (z = 0; z < n; z++) {
+                    if (MELT(R,y,z,n,n) != 0) {
+                        MELT(R,x,z,n,n)= 1;
+                    }
+                }
+            }
+        }
+    }
 }
 
 //Parse command line.
-int command(int numf,int snumf,int argc,int *nth,int *debug_level,int *o,int *printm,long int *smax,int *rm,int *lsntonet,char *argv[])
+int command(int numf,int snumf,int argc,int *nth,int *debug_level,int *o,int *printm,long int *smax,int *rm,char *argv[])
 {
 	int i;
 	numf=0;
@@ -291,12 +300,9 @@ int command(int numf,int snumf,int argc,int *nth,int *debug_level,int *o,int *pr
 		} else if( strcmp( argv[i], "-r" )==0 ) {
 			*o+=1;
 			printf("#####The processor adopts the sleptsov net rule.\n");
-		} else if( strcmp( argv[i], "-lsntonet" )==0 ) {
-			*lsntonet = 0;
-			*o+=1;
 		}
-		return( 0);
 	}
+	return( 0);
 }
 
 //allocate space for matrices and vector
@@ -304,19 +310,6 @@ int allocate(int *m,int *n,int *k,int *l,int *NST,int **mu,int **f,int **B,int *
 {
 	SKIP_COMM
 	int digit = sscanf(input_buffer,"%d %d %d %d %d",m,n,k,l,NST);
-
-	//check the number of n and m
-	if(*m < 0 || *n < 0) {
-		err = ERR_NEGATIVE;
-		perr("1");
-		exit(1);
-	}
-	if(*m == 0 || *n == 0) {
-		err = ERR_HEADER_ZERO;
-		perr("3");
-		exit(1);
-	}
-
 	*B = (int *)malloc( MATRIX_SIZE(*m,*n,int) );
 	*D = (int *)malloc( MATRIX_SIZE(*m,*n,int) );
 	*R = (int *)malloc( MATRIX_SIZE(*n,*n,int) );
@@ -358,9 +351,9 @@ void zeroBDRmu(int m,int n,int *mu,int *f,int *B,int *D,int *R)
 }
 
 /* Read LSN file, including header, arcs, initial marking.*/
-void read_lsn(int m,int n,int k,int l,int NST,int v1,int v2,int v3,int digit,int *mu,int *f,int *B,int *D,int *R,int debug_level,int nth,int printm,int rm,int lsntonet,FILE *fi,FILE *fo,char input_buffer[])
+void read_lsn(int m,int n,int k,int l,int NST,int v1,int v2,int v3,int digit,int *mu,int *f,int *B,int *D,int *R,int debug_level,int nth,int printm,int rm,FILE *fi,FILE *fo,char input_buffer[])
 {
-	int i,j,p;
+	int i,p;
 	/*zeroBDRmu*/
 	zeroBDRmu(m,n,mu,f,B,D,R);
 	/*read the header: m n k l NST*/
@@ -379,60 +372,18 @@ void read_lsn(int m,int n,int k,int l,int NST,int v1,int v2,int v3,int digit,int
 		if(debug_level>0&&rm) fprintf(fo,"%d %d\n",v1,v2);
 	}
 	if(fi != stdin ) fclose( fi );
-
-	/* save .lsn to .net*/
-	if(!lsntonet) {
-		for(j=1; j<=n; j++) {
-			fprintf(fo,"tr t%d ",j);
-			for(i=1; i<=m; i++) {
-				if(MELT(B,i-1,j-1,m,n)==1)
-					fprintf(fo,"p%d ",i);
-				else if(MELT(B,i-1,j-1,m,n)==-1)
-					fprintf(fo,"p%d\?-1 ",i);
-				else if(MELT(B,i-1,j-1,m,n)>1)
-					fprintf(fo,"p%d*%d ",i,MELT(B,i-1,j-1,m,n));
-			}
-			fprintf(fo,"-> ");
-			for(i=1; i<=m; i++) {
-				if(MELT(D,i-1,j-1,m,n)==1)
-					fprintf(fo,"p%d ",i);
-				else if(MELT(D,i-1,j-1,m,n)>1)
-					fprintf(fo,"p%d*%d ",i,MELT(D,i-1,j-1,m,n));
-			}
-			fprintf(fo,"\n");
-		}
-
-		for(i=1; i<=m; i++) {
-			if(mu[i-1]>0) {
-				fprintf(fo,"pl p%d (%d)\n",i,mu[i-1]);
-			}
-		}
-
-		for(j=1; j<=n; j++) {
-			for(i=1; i<=n; i++) {
-				if(MELT(R,j-1,i-1,n,n)==1)
-					fprintf(fo,"pr t%d > t%d\n",j,i);
-			}
-		}
-
-		fprintf(fo,"net bz\n");
-		printf("#####Save .lsn to .net!\n");
-		exit(0);
-	}
-
-
 	/*call function about priority arc chain*/
 	priority_chain(R,n,nth);
 
 	if(!rm) {
 		fprintf(fo,"%d %d\n\n",m,n);
-		printBDR(m,n,B,D,R,debug_level,rm,mu,lsntonet,fo);
+		printBDR(m,n,B,D,R,debug_level,rm,fo);
 		for(p=1; p<=m; p++) {
 			fprintf(fo,"%d ",mu[p-1]);
 		}
 		fprintf(fo,"\n");
 		printf("###The raw m, n, matrices and vectors have been generated!\n");
-		exit(0);
+		exit(1);
 	}
 
 }
@@ -445,20 +396,13 @@ void read_mnkl(int m,int n,int k,int l,int NST,int digit,int rm,int debug_level,
 		perr("1");
 		exit(1);
 	}
-
-	if(NST!=0) {
-		err = ERR_NST;
-		perr("11");
-		exit(1);
-	}
-
 	if(digit != 5 ) {
 		err = ERR_LESS;
 		perr("2");
 		exit(1);
 	}
 	if(m == 0 || n == 0 || k == 0) {
-		err = ERR_HEADER_ZERO;
+		err = ERR_H_ZERO;
 		perr("3");
 		exit(1);
 	}
@@ -471,7 +415,7 @@ void read_arc( int v1, int v2, int v3,int m,int n,int *B,int *D, int *R,int debu
 	int a, b;
 	if(debug_level > 0&&rm)  fprintf(fo,"%d %d %d\n",v1,v2,v3);
 	if(v1 == 0 || v2 == 0) {
-		err = ERR_ARC_ZERO;
+		err = ERR_A_ZERO;
 		perr("4");
 		exit(1);
 	}
@@ -506,7 +450,6 @@ void read_arc( int v1, int v2, int v3,int m,int n,int *B,int *D, int *R,int debu
 		}
 		if(v3<0) {
 			if(v3 != -1 ) {
-				fprintf(stderr,"Warning: arc %d %d %d\n",v1,v2,v3);
 				err = ERR_INHIBITOR;
 				perr("6");
 				exit(1);
@@ -516,12 +459,6 @@ void read_arc( int v1, int v2, int v3,int m,int n,int *B,int *D, int *R,int debu
 				fprintf(fo,"inhibitor arc from place %d to transition %d\n",v1,v2);        //v3 is negative,it is inhibitor
 			}
 		}
-		if(v3==0) {
-			fprintf(stderr,"Warning: arc %d %d %d\n",v1,v2,v3);
-			err = ERR_FORMAT;
-			perr("5");
-			exit(1);
-		}
 	} else if(v2 < 0) {
 		if(v3 != 0) {
 			fprintf(stderr,"Warning: arc %d %d %d\n",v1,v2,v3);
@@ -530,7 +467,7 @@ void read_arc( int v1, int v2, int v3,int m,int n,int *B,int *D, int *R,int debu
 			exit(1);
 		}
 		a = abs(v1),b = abs(v2);
-		if( MELT(R,a-1,b-1,n,n) != 0) {
+		if( MELT(R,a-1,b-1,m,n) != 0) {
 			fprintf(stderr,"Warning: arc %d %d\n",a,b);
 			err = ERR_DUP;
 			perr("9");
@@ -561,14 +498,14 @@ void read_arc( int v1, int v2, int v3,int m,int n,int *B,int *D, int *R,int debu
 /* SN-VM*/
 void run_lsn(int *f, int *mu, int *B,int *D,int *R,int m, int n,int debug_level, int nth,int printm,FILE *fo,long int smax)
 {
-	long int s = 0;// current step number
-	int nf;// number of fireable transitions
+	long int s = 0;// current step number 
+	int nf;// number of fireable transitions 
 	int p, t;// place, transition
-	int firable = 0;//multiplicity of fireable transition
-	//int firable_m = INT_MAX; //the minimum multiplicity of fireable transition
+	int firable = 0;//multiplicity of fireable transition 
+	//int firable_m = INT_MAX; //the minimum multiplicity of fireable transition 
 	int rn; //random number
-	int firing_n; //firing transition number
-	int l; //remainder
+	int firing_n; //firing transition number  
+	int l; //remainder 
 	int tb,td; //columns of matrix B and D
 	int ct; // count of fireable transitions
 	int fm; //multiplicity of firing transition
@@ -614,7 +551,7 @@ void run_lsn(int *f, int *mu, int *B,int *D,int *R,int m, int n,int debug_level,
 #pragma unroll
 			for(j = 1; j <= n; j++) {
 				if(MELT(R,i-1,j-1,n,n) > 0 && f[i - 1] != 0) { //R[i-1][j-1] > 0
-					f[j - 1] = 0;
+					f[j - 1] = 0;  
 					//MELT(R,i-1,j-1,n,n) = 0;//R[i-1][j-1] = 0
 				}
 			}
@@ -696,7 +633,7 @@ void run_lsn(int *f, int *mu, int *B,int *D,int *R,int m, int n,int debug_level,
 			if(s==smax) {
 				printf("###The result has been created! Specifies that the number of steps is %ld\n",smax);
 				fprintf(fo,"###The result has been created! Specifies that the number of steps is %ld\n",smax);
-				exit(0);
+				exit(1);
 			}
 		}
 
@@ -705,10 +642,9 @@ void run_lsn(int *f, int *mu, int *B,int *D,int *R,int m, int n,int debug_level,
 }
 
 /* output matrices*/
-void printBDR(int m,int n,int *B,int *D,int *R,int debug_level,int rm,int *mu,int lsntonet,FILE *fo)
+void printBDR(int m,int n,int *B,int *D,int *R,int debug_level,int rm,FILE *fo)
 {
 	int i,j;
-	/* output matrices*/
 	if(debug_level>0 || !rm ) {
 		if(rm) {
 			fprintf(fo,"matrix of transition incoming arcs B:\n");
@@ -740,7 +676,7 @@ void printBDR(int m,int n,int *B,int *D,int *R,int debug_level,int rm,int *mu,in
 		}
 		for(i=0; i<n; i++) {
 			for(j=0; j<n; j++) {
-				fprintf(fo,"%d\t",MELT(R,i,j,n,n)); //R[i][j]
+				fprintf(fo,"%d\t",MELT(R,i,j,m,n)); //R[i][j]
 			}
 			fprintf(fo,"\n");
 		}
